@@ -85,9 +85,9 @@
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="locationLabel" destination="mTH-Lr-waF" id="gvy-kh-Hdx"/>
+                        <outlet property="locLabel" destination="mTH-Lr-waF" id="gvy-kh-Hdx"/>
                         <outlet property="searchTextField" destination="s7G-3L-gs2" id="bsu-DY-yDN"/>
-                        <outlet property="tempratureLabel" destination="yW6-F4-dDM" id="0um-t6-ZZa"/>
+                        <outlet property="tempLabel" destination="yW6-F4-dDM" id="0um-t6-ZZa"/>
                         <outlet property="weatherConditionImage" destination="STc-Mr-dJU" id="bpR-PP-uqd"/>
                     </connections>
                 </viewController>

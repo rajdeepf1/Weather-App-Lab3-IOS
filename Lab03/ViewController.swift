@@ -13,10 +13,13 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var weatherConditionImage: UIImageView!
     
-    @IBOutlet weak var tempratureLabel: UILabel!
+    @IBOutlet weak var tempLabel: UILabel!
     
-    @IBOutlet weak var locationLabel: UILabel!
+    @IBOutlet weak var locLabel: UILabel!
     
+    
+    var searchText: String = ""
+    var results:[WeatherConditionsModel] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -41,6 +44,27 @@ class ViewController: UIViewController {
         
         loadWeather(search: searchTextField.text)
     }
+    
+    
+    func loadWeatherCondition() {
+            guard let url = URL(string: "https://www.weatherapi.com/docs/weather_conditions.json") else {
+                print("Invalid URL")
+                return
+            }
+            let request = URLRequest(url: url)
+
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                if let data = data {
+                    if let response = try? JSONDecoder().decode([WeatherConditionsModel].self, from: data) {
+                        DispatchQueue.main.async {
+                            self.results = response
+                        }
+                        return
+                    }
+                }
+            }.resume()
+        }
+    
     
     func loadWeather(search: String?) {
         
@@ -74,8 +98,8 @@ class ViewController: UIViewController {
                 print(weatherResponse.current.temp_c)
                 
                 DispatchQueue.main.async {
-                    self.locationLabel.text = weatherResponse.location.name
-                    self.tempratureLabel.text = "\(weatherResponse.current.temp_c)C"
+                    self.locLabel.text = weatherResponse.location.name
+                    self.tempLabel.text = "\(weatherResponse.current.temp_c)C"
                 }
                 
             }
@@ -135,50 +159,9 @@ struct Weather:Decodable {
     let condition: WeatherCondition
 }
 
-/*
- {
-     "location": {
-         "name": "London",
-         "region": "City of London, Greater London",
-         "country": "United Kingdom",
-         "lat": 51.52,
-         "lon": -0.11,
-         "tz_id": "Europe/London",
-         "localtime_epoch": 1669052955,
-         "localtime": "2022-11-21 17:49"
-     },
-     "current": {
-         "last_updated_epoch": 1669052700,
-         "last_updated": "2022-11-21 17:45",
-         "temp_c": 9.0,
-         "temp_f": 48.2,
-         "is_day": 0,
-         "condition": {
-             "text": "Light rain",
-             "icon": "//cdn.weatherapi.com/weather/64x64/night/296.png",
-             "code": 1183
-         },
-         "wind_mph": 21.7,
-         "wind_kph": 34.9,
-         "wind_degree": 230,
-         "wind_dir": "SW",
-         "pressure_mb": 982.0,
-         "pressure_in": 29.0,
-         "precip_mm": 0.7,
-         "precip_in": 0.03,
-         "humidity": 87,
-         "cloud": 100,
-         "feelslike_c": 4.9,
-         "feelslike_f": 40.7,
-         "vis_km": 10.0,
-         "vis_miles": 6.0,
-         "uv": 1.0,
-         "gust_mph": 26.6,
-         "gust_kph": 42.8
-     }
- }
- 
- */
-
-
-
+struct WeatherConditionsModel: Codable {
+    let code : Int
+    let day : String
+    let night : String
+}
+   
