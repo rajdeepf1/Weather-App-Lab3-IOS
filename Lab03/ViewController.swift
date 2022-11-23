@@ -17,9 +17,15 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var locLabel: UILabel!
     
+    @IBOutlet weak var day_Label: UILabel!
     
-    var searchText: String = ""
+    @IBOutlet weak var night_label: UILabel!
+    
+    var searchLocationText: String = ""
+    
     var results:[WeatherConditionsModel] = []
+    
+    var weatherResponseGlobal : WeatherResponse? = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,11 +46,17 @@ class ViewController: UIViewController {
     }
     
     @IBAction func onSearchedTapped(_ sender: UIButton) {
-        print("here")
-        
-        loadWeather(search: searchTextField.text)
+        searchLocationText = searchTextField.text!
+        loadWeather(search: searchLocationText)
     }
     
+    @IBAction func onSwitchToggle(_ sender: UISwitch) {
+        if sender.isOn {
+            displayData(weatherResp: self.weatherResponseGlobal!,flag: true)
+        } else {
+            displayData(weatherResp: self.weatherResponseGlobal!,flag: false)
+        }
+    }
     
     func loadWeatherCondition() {
             guard let url = URL(string: "https://www.weatherapi.com/docs/weather_conditions.json") else {
@@ -94,13 +106,9 @@ class ViewController: UIViewController {
             }
             
             if let weatherResponse = self.parseJson(data: data){
-                print(weatherResponse.location.name)
-                print(weatherResponse.current.temp_c)
                 
-                DispatchQueue.main.async {
-                    self.locLabel.text = weatherResponse.location.name
-                    self.tempLabel.text = "\(weatherResponse.current.temp_c)C"
-                }
+                self.weatherResponseGlobal = weatherResponse
+                self.displayData(weatherResp: self.weatherResponseGlobal!, flag: true)
                 
             }
             
@@ -113,6 +121,23 @@ class ViewController: UIViewController {
         dataTask.resume();
         
     }
+    
+    func displayData(weatherResp: WeatherResponse, flag: Bool)  {
+        if flag {
+            DispatchQueue.main.async {
+                self.locLabel.text = weatherResp.location.name
+                
+                self.tempLabel.text = "\(weatherResp.current.temp_c) C°"
+            }
+        }else {
+            DispatchQueue.main.async {
+                self.locLabel.text = weatherResp.location.name
+                
+                self.tempLabel.text = "\(weatherResp.current.temp_f) F°"
+            }
+        }
+        }
+       
     
     private func getURL (query: String) -> URL? {
         let baseUrl = "https://api.weatherapi.com/v1/"
@@ -156,6 +181,7 @@ struct WeatherCondition : Decodable{
 
 struct Weather:Decodable {
     let temp_c: Float
+    let temp_f: Float
     let condition: WeatherCondition
 }
 
