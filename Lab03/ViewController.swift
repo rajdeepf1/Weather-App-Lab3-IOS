@@ -6,12 +6,18 @@
 //
 
 import UIKit
+import CoreLocation
 
-class ViewController: UIViewController {
+
+class ViewController: UIViewController,CLLocationManagerDelegate {
     
     @IBOutlet weak var searchTextField: UITextField!
     
     @IBOutlet weak var weatherConditionImage: UIImageView!
+    
+    @IBOutlet weak var dayImageView: UIImageView!
+    
+    @IBOutlet weak var nightImageView: UIImageView!
     
     @IBOutlet weak var tempLabel: UILabel!
     
@@ -21,28 +27,62 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var night_label: UILabel!
     
+    @IBOutlet weak var swith: UISwitch!
+    
     var searchLocationText: String = ""
     
     var results:[WeatherConditionsModel] = []
     
     var weatherResponseGlobal : WeatherResponse? = nil
     
+    private let locationManager = CLLocationManager()
+
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        displaySampleImageForDemo();
+        
+        swith.isEnabled = false
+        
+        displaySampleImageForDemo(code: -1);
+        displayDayNightImage()
+        loadWeatherCondition()
+
+        locationManager.delegate = self
+        
+
     }
     
-    private func displaySampleImageForDemo() {
+    private func displaySampleImageForDemo(code: Int) {
         let config = UIImage.SymbolConfiguration (paletteColors: [
-            .systemRed,
-            .systemTeal, .systemYellow
+            .systemYellow,
+            .systemGray4, .systemYellow
         ])
         weatherConditionImage.preferredSymbolConfiguration=config
         weatherConditionImage.image = UIImage (systemName: "cloud.sun.fill")
     }
     
+    private func displayDayNightImage() {
+        let configDay = UIImage.SymbolConfiguration (paletteColors: [
+            .systemYellow,
+            .systemGray4,
+        ])
+        dayImageView.preferredSymbolConfiguration=configDay
+        dayImageView.image = UIImage (systemName: "sun.max.circle")
+        
+        
+        let configNight = UIImage.SymbolConfiguration (paletteColors: [
+            .systemYellow,
+            .systemGray4,
+        ])
+        nightImageView.preferredSymbolConfiguration=configNight
+        nightImageView.image = UIImage (systemName: "moon.circle")
+        
+    }
+    
     @IBAction func onLocationTapped(_ sender: UIButton) {
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.requestLocation()
     }
     
     @IBAction func onSearchedTapped(_ sender: UIButton) {
@@ -51,6 +91,7 @@ class ViewController: UIViewController {
     }
     
     @IBAction func onSwitchToggle(_ sender: UISwitch) {
+            
         if sender.isOn {
             displayData(weatherResp: self.weatherResponseGlobal!,flag: true)
         } else {
@@ -75,6 +116,25 @@ class ViewController: UIViewController {
                     }
                 }
             }.resume()
+        }
+    
+    
+    func locationManager (_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    print("Got location")
+        
+        if let location = locations.last {
+        let latitude = location.coordinate.latitude
+        let longitude = location.coordinate.longitude
+        print ("LatLng: (\(latitude), \(longitude))")
+            searchLocationText = "\(latitude),\(longitude)"
+            loadWeather(search: searchLocationText)
+            
+        }
+        
+    }
+
+        func locationManager (_ manager: CLLocationManager, didFailWithError error: Error) {
+            print(error)
         }
     
     
@@ -123,17 +183,35 @@ class ViewController: UIViewController {
     }
     
     func displayData(weatherResp: WeatherResponse, flag: Bool)  {
+
+        let filtered = self.results.filter{ val in
+          return val.code == weatherResp.current.condition.code
+        }
         if flag {
             DispatchQueue.main.async {
+                self.swith.isEnabled = true
                 self.locLabel.text = weatherResp.location.name
                 
                 self.tempLabel.text = "\(weatherResp.current.temp_c) C°"
+                                
+                if filtered.count > 0 {
+                    self.day_Label.text = "Day: \(filtered[0].day)"
+                    self.night_label.text = "Night: \(filtered[0].night)"
+                    self.displaySampleImageForDemo(code: weatherResp.current.condition.code)
+                }
+                
             }
         }else {
             DispatchQueue.main.async {
+                self.swith.isEnabled = true
                 self.locLabel.text = weatherResp.location.name
                 
                 self.tempLabel.text = "\(weatherResp.current.temp_f) F°"
+                if filtered.count > 0 {
+                    self.day_Label.text = "Day: \(filtered[0].day)"
+                    self.night_label.text = "Night: \(filtered[0].night)"
+                    self.displaySampleImageForDemo(code: weatherResp.current.condition.code)
+                }
             }
         }
         }
