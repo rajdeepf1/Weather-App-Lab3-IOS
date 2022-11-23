@@ -9,7 +9,7 @@ import UIKit
 import CoreLocation
 
 
-class ViewController: UIViewController,CLLocationManagerDelegate {
+class ViewController: UIViewController,CLLocationManagerDelegate,UITextFieldDelegate {
     
     @IBOutlet weak var searchTextField: UITextField!
     
@@ -31,7 +31,7 @@ class ViewController: UIViewController,CLLocationManagerDelegate {
     
     var searchLocationText: String = ""
     
-    var results:[WeatherConditionsModel] = []
+    var copyArr:[WeatherConditionsModel] = []
     
     var weatherResponseGlobal : WeatherResponse? = nil
     
@@ -44,22 +44,81 @@ class ViewController: UIViewController,CLLocationManagerDelegate {
         
         swith.isEnabled = false
         
-        displaySampleImageForDemo(code: -1);
+        displayWeatherImage(code: 0);
         displayDayNightImage()
         loadWeatherCondition()
 
         locationManager.delegate = self
-        
+        self.searchTextField.delegate = self
 
     }
     
-    private func displaySampleImageForDemo(code: Int) {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        searchLocationText = searchTextField.text!
+        loadWeather(search: searchLocationText)
+        self.view.endEditing(true)
+
+            return true
+        }
+    
+    private func displayWeatherImage(code: Int) {
         let config = UIImage.SymbolConfiguration (paletteColors: [
             .systemYellow,
             .systemGray4, .systemYellow
         ])
         weatherConditionImage.preferredSymbolConfiguration=config
-        weatherConditionImage.image = UIImage (systemName: "cloud.sun.fill")
+        
+        print(code)
+        
+        switch code {
+        case 0:
+            self.weatherConditionImage.image = UIImage(systemName:"exclamationmark.triangle")
+            
+        case 1000:
+            weatherConditionImage.image = UIImage (systemName: "sun.max")
+        case 1003:
+            weatherConditionImage.image = UIImage (systemName: "cloud.sun.circle.fill")
+        case 1006:
+            weatherConditionImage.image = UIImage (systemName: "cloud.sun")
+        case 1009:
+            weatherConditionImage.image = UIImage (systemName: "cloud")
+        case 1030:
+            weatherConditionImage.image = UIImage (systemName: "smoke.fill")
+        case 1063:
+            weatherConditionImage.image = UIImage (systemName: "cloud.sun.rain.circle")
+        case 1066:
+            weatherConditionImage.image = UIImage (systemName: "cloud.snow")
+        case 1069:
+            weatherConditionImage.image = UIImage (systemName: "cloud.sleet")
+        case 1072:
+            weatherConditionImage.image = UIImage (systemName: "cloud.drizzle.circle.fill")
+        case 1087:
+            weatherConditionImage.image = UIImage (systemName: "cloud.bolt.rain")
+        case 1114:
+            weatherConditionImage.image = UIImage (systemName: "cloud.snow")
+        case 1117:
+            weatherConditionImage.image = UIImage (systemName: "cloud.rain.circle")
+        case 1135:
+            weatherConditionImage.image = UIImage (systemName: "cloud.fog")
+        case 1147:
+            weatherConditionImage.image = UIImage (systemName: "cloud.fog")
+        case 1150:
+            weatherConditionImage.image = UIImage (systemName: "cloud.sun.rain.fill")
+        case 1153:
+            weatherConditionImage.image = UIImage (systemName: "cloud.sun.rain.fill")
+        case 1168:
+            weatherConditionImage.image = UIImage (systemName: "cloud.snow.circle")
+        case 1183:
+            weatherConditionImage.image = UIImage (systemName: "cloud.rain")
+        case 1189 | 1192 | 1195 :
+            weatherConditionImage.image = UIImage (systemName: "cloud.rain.circle.fill")
+            
+        default:
+            print("No Data Found")
+            self.weatherConditionImage.image = UIImage (systemName: "exclamationmark.trianglel")
+        }
+        
+        
     }
     
     private func displayDayNightImage() {
@@ -110,7 +169,7 @@ class ViewController: UIViewController,CLLocationManagerDelegate {
                 if let data = data {
                     if let response = try? JSONDecoder().decode([WeatherConditionsModel].self, from: data) {
                         DispatchQueue.main.async {
-                            self.results = response
+                            self.copyArr = response
                         }
                         return
                     }
@@ -125,7 +184,7 @@ class ViewController: UIViewController,CLLocationManagerDelegate {
         if let location = locations.last {
         let latitude = location.coordinate.latitude
         let longitude = location.coordinate.longitude
-        print ("LatLng: (\(latitude), \(longitude))")
+        print ("LatLng: (\(latitude),\(longitude))")
             searchLocationText = "\(latitude),\(longitude)"
             loadWeather(search: searchLocationText)
             
@@ -172,8 +231,6 @@ class ViewController: UIViewController,CLLocationManagerDelegate {
                 
             }
             
-            
-            
         }
         
         //step 4 : start the task
@@ -184,7 +241,7 @@ class ViewController: UIViewController,CLLocationManagerDelegate {
     
     func displayData(weatherResp: WeatherResponse, flag: Bool)  {
 
-        let filtered = self.results.filter{ val in
+        let filtered = self.copyArr.filter{ val in
           return val.code == weatherResp.current.condition.code
         }
         if flag {
@@ -197,7 +254,7 @@ class ViewController: UIViewController,CLLocationManagerDelegate {
                 if filtered.count > 0 {
                     self.day_Label.text = "Day: \(filtered[0].day)"
                     self.night_label.text = "Night: \(filtered[0].night)"
-                    self.displaySampleImageForDemo(code: weatherResp.current.condition.code)
+                    self.displayWeatherImage(code: weatherResp.current.condition.code)
                 }
                 
             }
@@ -210,7 +267,7 @@ class ViewController: UIViewController,CLLocationManagerDelegate {
                 if filtered.count > 0 {
                     self.day_Label.text = "Day: \(filtered[0].day)"
                     self.night_label.text = "Night: \(filtered[0].night)"
-                    self.displaySampleImageForDemo(code: weatherResp.current.condition.code)
+                    self.displayWeatherImage(code: weatherResp.current.condition.code)
                 }
             }
         }
@@ -228,8 +285,6 @@ class ViewController: UIViewController,CLLocationManagerDelegate {
         print(url)
         return URL(string: url)
     }
-    
-    
     
     private func parseJson(data: Data) -> WeatherResponse?{
         let decoder = JSONDecoder()
