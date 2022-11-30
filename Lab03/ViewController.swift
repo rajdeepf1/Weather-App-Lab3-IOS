@@ -158,6 +158,11 @@ class ViewController: UIViewController,CLLocationManagerDelegate,UITextFieldDele
         }
     }
     
+    @IBAction func onToolbarButtonPressed(_ sender: Any) {
+        print("hi")
+    }
+    
+    
     func loadWeatherCondition() {
             guard let url = URL(string: "https://www.weatherapi.com/docs/weather_conditions.json") else {
                 print("Invalid URL")
